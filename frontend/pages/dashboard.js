@@ -2,6 +2,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import io from "socket.io-client";
 import dynamic from "next/dynamic";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 
 const Mapa = dynamic(() => import("../components/Mapa"), {
   ssr: false,
@@ -147,6 +155,35 @@ export default function Dashboard() {
         <h2>📍 Ubicación Tiempo Real</h2>
         <Mapa datos={datos} />
       </div>
+
+        {/* GRAFICO */}
+    <div
+      style={{
+        background: "#1e293b",
+        padding: "20px",
+        borderRadius: "14px",
+        marginBottom: "30px",
+      }}
+    >
+      <h2 style={{ marginBottom: "15px" }}>
+        📈 Histórico Combustible
+      </h2>
+
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={[...datos].reverse()}>
+          <XAxis dataKey="dispositivo" />
+          <YAxis />
+          <Tooltip />
+
+          <Line
+            type="monotone"
+            dataKey="combustible"
+            stroke="#22c55e"
+            strokeWidth={3}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
 
       {/* TABLA */}
       <div

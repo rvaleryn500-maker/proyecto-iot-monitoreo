@@ -1,7 +1,7 @@
 const axios = require("axios");
 
 const URL = "http://localhost:3001/sensores";
-const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsInJvbCI6IkFETUlOIiwiaWF0IjoxNzc3NDE4ODcyLCJleHAiOjE3Nzc0MjI0NzJ9.Mpe6iAv_jKsdIecR4euexLxEUBsBtMRIvMzWw7PbEKw";
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsInJvbCI6IkFETUlOIiwiaWF0IjoxNzc3NDI0MTY4LCJleHAiOjE3Nzc0Mjc3Njh9.L29lbv-hFWEn5KxPDp1BgQyY-m6uYtVFFN2EWrpw1Xg";
 
 function generarDato() {
   return {
