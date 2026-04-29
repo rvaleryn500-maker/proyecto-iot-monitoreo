@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import io from "socket.io-client";
 import dynamic from "next/dynamic";
 
@@ -8,16 +9,56 @@ const Mapa = dynamic(() => import("../components/Mapa"), {
 
 export default function Dashboard() {
   const [datos, setDatos] = useState([]);
+  const [rol, setRol] = useState("");
+  const [username, setUsername] = useState("");
+
+  const router = useRouter();
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/");
+      return;
+    }
+
+    setRol(localStorage.getItem("rol") || "USER");
+    setUsername(localStorage.getItem("username") || "user");
+
+    // cargar cache offline
+    const guardado = localStorage.getItem("datos");
+    if (guardado) {
+      setDatos(JSON.parse(guardado));
+    }
+
     const socket = io("http://localhost:3001");
 
     socket.on("nuevoDato", (data) => {
-      setDatos((prev) => [data, ...prev.slice(0, 9)]);
+      setDatos((prev) => {
+        const nuevos = [data, ...prev.slice(0, 9)];
+
+        localStorage.setItem(
+          "datos",
+          JSON.stringify(nuevos)
+        );
+
+        return nuevos;
+      });
     });
 
     return () => socket.disconnect();
   }, []);
+
+  function cerrarSesion() {
+    localStorage.clear();
+    router.push("/");
+  }
+
+  function ocultarId(id) {
+    if (rol === "ADMIN") return id;
+
+    return id.slice(0, 4) + "****";
+  }
 
   const alertas = datos.filter((d) => d.alerta).length;
 
@@ -36,22 +77,36 @@ export default function Dashboard() {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
           marginBottom: "30px",
         }}
       >
-        <h1 style={{ fontSize: "32px" }}>
-          🚗 Simon Movilidad 
-        </h1>
+        <h1>🚗 Simon Movilidad</h1>
 
-        <div
-          style={{
-            background: "#1e293b",
-            padding: "12px 20px",
-            borderRadius: "12px",
-          }}
-        >
-          Admin Online 🟢
+        <div>
+          <span
+            style={{
+              marginRight: "15px",
+              background: "#1e293b",
+              padding: "10px",
+              borderRadius: "10px",
+            }}
+          >
+            {username} ({rol})
+          </span>
+
+          <button
+            onClick={cerrarSesion}
+            style={{
+              background: "#ef4444",
+              color: "white",
+              border: "none",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              cursor: "pointer",
+            }}
+          >
+            Salir
+          </button>
         </div>
       </div>
 
@@ -59,45 +114,25 @@ export default function Dashboard() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+          gridTemplateColumns:
+            "repeat(auto-fit,minmax(220px,1fr))",
           gap: "20px",
           marginBottom: "30px",
         }}
       >
-        <div
-          style={{
-            background: "#1e293b",
-            padding: "20px",
-            borderRadius: "14px",
-          }}
-        >
-          <h3>Total Eventos</h3>
-          <h2>{datos.length}</h2>
-        </div>
-
-        <div
-          style={{
-            background: "#1e293b",
-            padding: "20px",
-            borderRadius: "14px",
-          }}
-        >
-          <h3>Alertas Activas</h3>
-          <h2 style={{ color: "#ef4444" }}>{alertas}</h2>
-        </div>
-
-        <div
-          style={{
-            background: "#1e293b",
-            padding: "20px",
-            borderRadius: "14px",
-          }}
-        >
-          <h3>Vehículos</h3>
-          <h2>
-            {new Set(datos.map((d) => d.dispositivo)).size}
-          </h2>
-        </div>
+        <Card titulo="Total Eventos" valor={datos.length} />
+        <Card titulo="Vehículos"
+          valor={
+            new Set(
+              datos.map((d) => d.dispositivo)
+            ).size
+          }
+        />
+        <Card
+          titulo="Alertas"
+          valor={rol === "ADMIN" ? alertas : "--"}
+          rojo
+        />
       </div>
 
       {/* MAPA */}
@@ -109,10 +144,7 @@ export default function Dashboard() {
           marginBottom: "30px",
         }}
       >
-        <h2 style={{ marginBottom: "15px" }}>
-          📍 Ubicación en Tiempo Real
-        </h2>
-
+        <h2>📍 Ubicación Tiempo Real</h2>
         <Mapa datos={datos} />
       </div>
 
@@ -124,54 +156,48 @@ export default function Dashboard() {
           borderRadius: "14px",
         }}
       >
-        <h2 style={{ marginBottom: "15px" }}>
-          📊 Últimos Eventos
-        </h2>
+        <h2>📊 Últimos Eventos</h2>
 
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-          }}
-        >
+        <table style={{ width: "100%" }}>
           <thead>
-            <tr style={{ textAlign: "left", color: "#94a3b8" }}>
-              <th>Vehículo</th>
-              <th>Combustible</th>
-              <th>Temp</th>
-              <th>Estado</th>
+            <tr style={{ color: "#94a3b8" }}>
+              <th align="left">Vehículo</th>
+              <th align="left">Combustible</th>
+              <th align="left">Temp</th>
+              <th align="left">Estado</th>
             </tr>
           </thead>
 
           <tbody>
             {datos.map((d, i) => (
-              <tr
-                key={i}
-                style={{
-                  borderTop: "1px solid #334155",
-                }}
-              >
-                <td style={{ padding: "12px 0" }}>
-                  {d.dispositivo}
+              <tr key={i}>
+                <td>{ocultarId(d.dispositivo)}</td>
+
+                <td>
+                  {Number(
+                    d.combustible || 0
+                  ).toFixed(2)}
+                  %
                 </td>
 
                 <td>
-                  {Number(d.combustible || 0).toFixed(2)}%
+                  {Number(
+                    d.temperatura || 0
+                  ).toFixed(1)}
+                  °C
                 </td>
 
                 <td>
-                  {Number(d.temperatura || 0).toFixed(1)}°C
-                </td>
-
-                <td>
-                  {d.alerta ? (
-                    <span style={{ color: "#ef4444" }}>
-                      ⚠ ALERTA
-                    </span>
+                  {rol === "ADMIN" ? (
+                    d.alerta ? (
+                      <span style={{ color: "red" }}>
+                        ⚠ ALERTA
+                      </span>
+                    ) : (
+                      "OK"
+                    )
                   ) : (
-                    <span style={{ color: "#22c55e" }}>
-                      OK
-                    </span>
+                    "Visible Admin"
                   )}
                 </td>
               </tr>
@@ -179,6 +205,23 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function Card({ titulo, valor, rojo }) {
+  return (
+    <div
+      style={{
+        background: "#1e293b",
+        padding: "20px",
+        borderRadius: "14px",
+      }}
+    >
+      <h3>{titulo}</h3>
+      <h2 style={{ color: rojo ? "#ef4444" : "white" }}>
+        {valor}
+      </h2>
     </div>
   );
 }

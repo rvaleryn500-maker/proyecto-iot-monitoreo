@@ -22,6 +22,13 @@ export default function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", username);
 
+      // guardar rol
+      if (username === "admin") {
+        localStorage.setItem("rol", "ADMIN");
+      } else {
+        localStorage.setItem("rol", "USER");
+      }
+
       router.push("/dashboard");
 
     } catch (error) {
@@ -52,24 +59,20 @@ export default function Login() {
           color: "white",
         }}
       >
-        <h1 style={{ marginBottom: "20px" }}>
-          🚗 Simon Movilidad
-        </h1>
-
-        <p style={{ marginBottom: "20px", color: "#94a3b8" }}>
+        <h1>🚗 Simon Movilidad</h1>
+        <p style={{ color: "#94a3b8" }}>
           Inicia sesión
         </p>
 
         <input
           placeholder="Usuario"
           value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
-          }
+          onChange={(e) => setUsername(e.target.value)}
           required
           style={{
             width: "100%",
             padding: "12px",
+            marginTop: "15px",
             marginBottom: "15px",
             borderRadius: "10px",
             border: "none",
@@ -86,20 +89,13 @@ export default function Login() {
             color: "white",
             border: "none",
             borderRadius: "10px",
-            cursor: "pointer",
           }}
         >
           {loading ? "Entrando..." : "Ingresar"}
         </button>
 
-        <p
-          style={{
-            marginTop: "15px",
-            fontSize: "14px",
-            color: "#94a3b8",
-          }}
-        >
-          Usa: admin o user
+        <p style={{ marginTop: "15px", color: "#94a3b8" }}>
+          Usuarios: admin / user
         </p>
       </form>
     </div>
